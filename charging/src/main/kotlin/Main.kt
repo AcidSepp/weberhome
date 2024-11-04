@@ -5,16 +5,16 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.pmw.tinylog.Logger
+import org.tinylog.kotlin.Logger
 import java.time.Duration
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.math.sqrt
 
 private const val FRONIUS_API_URL = "http://fronius-wechselrichter/solar_api/v1/GetPowerFlowRealtimeData.fcgi"
 private const val WALLBOX_POWER_DRAW_URL = "http://warp2-296n/meter/values"
 private const val WALLBOX_CURRENT_UPDATE_URL = "http://warp2-296n/evse/global_current_update"
-private const val WALLBOX_CURRENT_URL = "http://warp2-296n/evse/global_current"
 private const val WALLBOX_START_CHARGE_URL = "http://warp2-296n/evse/start_charging "
 private const val WALLBOX_STOP_CHARGE_URL = "http://warp2-296n/evse/stop_charging"
 
@@ -34,10 +34,13 @@ fun main() {
 \/    \/_|\__|\__\___|_|    \_/\_/ \___|\__, |  /_/   
                                         |___/                  
 
-Charging version 0.1.0
+Charging version 0.2.0
 ---
     """.trimIndent()
     )
+
+    val state = State(AtomicBoolean(true))
+    HttpServer(state).start()
 
     val master = ModbusTCPMaster(VARTA_BATTERIE, 502)
     master.connect()
@@ -46,10 +49,7 @@ Charging version 0.1.0
         .build()
 
     Timer().scheduleAtFixedRate(0L, Duration.ofSeconds(30).toMillis()) {
-        val configuredChargeCurrentMilliAmps = readChargeCurrent(client)
-        if (configuredChargeCurrentMilliAmps == 16_000) {
-            Logger.info("Voigas mode activated, because 16A are configured in the Wallbox. Not changing current based on solar power.")
-        } else {
+        if (state.solarOverProductionCharging.get()) {
             val batteryChargingPowerWatts = readBatteryChargingPower(master)
             val gridPowerWatts = readGridPower(master)
             val solarPanelPowerWatts = readSolarPanelPower(client)
@@ -69,8 +69,9 @@ Charging version 0.1.0
                     - Power usage: ${powerUsage}W
                     - Overproduction: ${overProductionWatts}W
                     - Next Charging Power: ${overProductionWatts}W
-                    - Next Charging Current: ${nextChargingCurrentMilliAmps.toInt()}mA
-                """.trimIndent())
+                    - Next CharginEnabledg Current: ${nextChargingCurrentMilliAmps.toInt()}mA
+                """.trimIndent()
+            )
 
             if (overProductionWatts < MIN_OVERPRODUCTION_WATTS) {
                 stopCharge(client)
@@ -78,24 +79,13 @@ Charging version 0.1.0
                 startCharge(client)
                 setChargeCurrent(nextChargingCurrentMilliAmps, client)
             }
+        } else {
+            setChargeCurrent(16_000f, client)
         }
     }
 }
 
-private fun powerToMilliAmps(powerWatts: Int) = (powerWatts / (400f  * sqrt(3f))) * 1000f
-
-private fun readChargeCurrent(
-    client: OkHttpClient,
-): Int = try {
-    val request = Request.Builder().url(WALLBOX_CURRENT_URL).build()
-    val body = client.newCall(request).execute().body!!
-    JsonParser.parseString(body.string())
-        .asJsonObject.get("current")
-        .asInt
-} catch (e: Exception) {
-    Logger.warn(e, "Exception while fetching current data from Wallbox: ")
-    0
-}
+private fun powerToMilliAmps(powerWatts: Int) = (powerWatts / (400f * sqrt(3f))) * 1000f
 
 private fun setChargeCurrent(nextChargingCurrentMilliAmps: Float, client: OkHttpClient) {
     val jsonString = "{\"current\":${nextChargingCurrentMilliAmps.toInt()}}"

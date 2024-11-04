@@ -3,11 +3,12 @@ Description=Solar to InfluxDB Service
 After=syslog.target network.target
 
 [Service]
+WorkingDirectory=/home/yannick/mitterweg7/charging-1.0-SNAPSHOT/
 SuccessExitStatus=143
 User=yannick
 Type=simple
 
-ExecStart=/bin/bash /home/yannick/mitterweg7/charging-1.0-SNAPSHOT/bin/charging
+ExecStart=/bin/bash ./bin/charging
 ExecStop=/bin/kill -15 $MAINPID
 
 Restart=always

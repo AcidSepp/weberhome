@@ -13,10 +13,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-
     implementation(libs.gson)
-    implementation(libs.influxdb.client.java)
     implementation(libs.j2mod)
     implementation(libs.okhttp)
     implementation(libs.tinylog.impl)
@@ -26,10 +23,6 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 application {

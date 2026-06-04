@@ -12,18 +12,12 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-
     implementation(libs.gson)
     implementation(libs.influxdb.client.java)
     implementation(libs.j2mod)
     implementation(libs.okhttp)
     implementation(libs.tinylog.impl)
     implementation(libs.tinylog.api)
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 application {

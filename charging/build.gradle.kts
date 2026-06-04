@@ -1,7 +1,8 @@
 plugins {
-    kotlin("jvm") version "2.0.21"
-    kotlin("plugin.serialization") version "2.0.21"
+    alias(libs.plugins.kotlin)
+    alias(libs.plugins.kotlin.serialization)
     application
+    java
 }
 
 group = "de.weberhome"
@@ -14,18 +15,17 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
 
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
-    implementation("com.influxdb:influxdb-client-java:6.9.0")
-    implementation("org.tinylog:tinylog-api-kotlin:2.7.0")
-    implementation("org.tinylog:tinylog-impl:2.7.0")
-    implementation("com.ghgande:j2mod:3.1.1")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.gson)
+    implementation(libs.influxdb.client.java)
+    implementation(libs.j2mod)
+    implementation(libs.okhttp)
+    implementation(libs.tinylog.impl)
+    implementation(libs.tinylog.api)
 
-    val ktorVersion = "3.0.0"
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
 }
 
 tasks.test {
@@ -37,5 +37,11 @@ application {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }

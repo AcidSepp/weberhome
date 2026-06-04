@@ -29,14 +29,14 @@ class HttpServer(private val state: State, private val port: Int = 8888, private
                     val requestBody = call.receive<StateResponse>()
                     state.solarOverProductionCharging.set(requestBody.solarOverProductionCharging)
                     if (requestBody.solarOverProductionCharging) {
-                        Logger.info("Enabled solar overproduction charging.")
+                        Logger.info("Enabled solar overproduction charging." )
                     } else {
-                        Logger.info("Disabled solar overproduction charging.")
+                        Logger.info("Disabled solar overproduction charging." )
                     }
                 }
             }
         }.start(wait = false)
-        Logger.info("HttpServer is listening on '$host:$port'")
+        Logger.info("HttpServer is listening on '$host:$port'" )
     }
 }
 

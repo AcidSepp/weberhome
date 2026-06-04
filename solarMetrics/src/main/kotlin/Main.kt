@@ -5,14 +5,15 @@ import com.influxdb.client.InfluxDBClientFactory
 import com.influxdb.client.domain.WritePrecision
 import com.influxdb.client.write.Point
 import okhttp3.*
-import org.pmw.tinylog.Logger
+import org.tinylog.kotlin.Logger
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 import kotlin.concurrent.scheduleAtFixedRate
 
 private const val POLL_INTERVAL_MINUTES = 2L
-private const val FRONIUS_API_URL = "http://fronius-wechselrichter/solar_api/v1/GetPowerFlowRealtimeData.fcgi"
+private const val FRONIUS_API_URL =
+    "http://fronius-wechselrichter/solar_api/v1/GetPowerFlowRealtimeData.fcgi"
 private const val WALLBOX_POWER_DRAW_URL = "http://warp2-296n/meter/values"
 
 private const val INFLUX_DB_URL = "http://mitterweg7:8086"
@@ -34,7 +35,7 @@ fun main() {
 \/    \/_|\__|\__\___|_|    \_/\_/ \___|\__, |  /_/   
                                         |___/                  
 
-Solar Metrics to InfluxDB version 0.7.0
+Solar Metrics to InfluxDB version 0.8.0
 ---
     """.trimIndent()
     )
@@ -42,7 +43,8 @@ Solar Metrics to InfluxDB version 0.7.0
     val token = INFLUX_DB_TOKEN.toCharArray()
     val org = INFLUX_DB_ORG
     val bucket = INFLUX_DB_BUCKET
-    val influxDBClient: InfluxDBClient = InfluxDBClientFactory.create(INFLUX_DB_URL, token, org, bucket)
+    val influxDBClient: InfluxDBClient =
+        InfluxDBClientFactory.create(INFLUX_DB_URL, token, org, bucket)
 
     val master = ModbusTCPMaster(VARTA_BATTERIE, 502)
     master.connect()
@@ -50,7 +52,10 @@ Solar Metrics to InfluxDB version 0.7.0
     val client = OkHttpClient.Builder()
         .build()
 
-    Timer().scheduleAtFixedRate(0L, Duration.ofMinutes(POLL_INTERVAL_MINUTES).toMillis()) {
+    Timer().scheduleAtFixedRate(
+        0L,
+        Duration.ofMinutes(POLL_INTERVAL_MINUTES).toMillis()
+    ) {
         try {
             val point = Point.measurement("mitterweg7")
                 .time(Instant.now().toEpochMilli(), WritePrecision.MS)
@@ -66,7 +71,7 @@ Solar Metrics to InfluxDB version 0.7.0
 
 private fun readBatteryData(
     master: ModbusTCPMaster,
-    point: Point
+    point: Point,
 ) = try {
     val resp1 = master.readMultipleRegisters(1066, 1).map {
         it.value.toShort()
@@ -82,7 +87,7 @@ private fun readBatteryData(
         it.value
     }.first()
     point.addField("SOC", resp3)
-    Logger.info("Wrote Battery data to InfluxDB")
+    Logger.info("Wrote Battery data to InfluxDB"  )
 } catch (e: Exception) {
     Logger.warn(e, "Exception while fetching Modbus data: ")
     point.addField("active_power", 0)
@@ -92,10 +97,10 @@ private fun readBatteryData(
 
 private fun readInverterData(
     client: OkHttpClient,
-    point: Point
+    point: Point,
 ) = try {
     val request = Request.Builder().url(FRONIUS_API_URL).build()
-    val body = client.newCall(request).execute().body!!
+    val body = client.newCall(request).execute().body
     val p = JsonParser.parseString(body.string())
         .asJsonObject.get("Body")
         .asJsonObject.get("Data")
@@ -104,7 +109,7 @@ private fun readInverterData(
         .asJsonObject.get("P")
         .asInt
     point.addField("PMB", p)
-    Logger.info("Wrote Inverter data to InfluxDB")
+    Logger.info("Wrote Inverter data to InfluxDB" )
 } catch (e: Exception) {
     Logger.warn(e, "Exception while fetching HTTP data: ")
     point.addField("PMB", 0)
@@ -112,15 +117,15 @@ private fun readInverterData(
 
 private fun readWallboxData(
     client: OkHttpClient,
-    point: Point
+    point: Point,
 ) = try {
     val request = Request.Builder().url(WALLBOX_POWER_DRAW_URL).build()
-    val body = client.newCall(request).execute().body!!
+    val body = client.newCall(request).execute().body
     val p = JsonParser.parseString(body.string())
         .asJsonObject.get("power")
         .asInt
     point.addField("wallbox_power", p)
-    Logger.info("Wrote Wallbox data to InfluxDB")
+    Logger.info("Wrote Wallbox data to InfluxDB" )
 } catch (e: Exception) {
     Logger.warn(e, "Exception while fetching HTTP data from Wallbox: ")
     point.addField("wallbox_power", 0)

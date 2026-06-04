@@ -34,7 +34,7 @@ fun main() {
 \/    \/_|\__|\__\___|_|    \_/\_/ \___|\__, |  /_/   
                                         |___/                  
 
-Charging version 0.2.0
+Charging version 0.3.0
 ---
     """.trimIndent()
     )
@@ -95,7 +95,7 @@ private fun setChargeCurrent(nextChargingCurrentMilliAmps: Float, client: OkHttp
     try {
         val request = Request.Builder().url(WALLBOX_CURRENT_UPDATE_URL).post(requestBody).build()
         val response = client.newCall(request).execute()
-        println(response.body!!.string())
+        println(response.body.string())
         check(response.code == 200)
     } catch (e: Exception) {
         Logger.warn(e, "Exception while changing wallbox current: ")
@@ -109,7 +109,7 @@ private fun startCharge(client: OkHttpClient) {
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val request = Request.Builder().url(WALLBOX_START_CHARGE_URL).post(jsonString.toRequestBody(mediaType)).build()
         val response = client.newCall(request).execute()
-        println(response.body!!.string())
+        println(response.body.string())
         check(response.code == 200)
     } catch (e: Exception) {
         Logger.warn(e, "Exception while starting charging: ")
@@ -123,7 +123,7 @@ private fun stopCharge(client: OkHttpClient) {
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val request = Request.Builder().url(WALLBOX_STOP_CHARGE_URL).post(jsonString.toRequestBody(mediaType)).build()
         val response = client.newCall(request).execute()
-        println(response.body!!.string())
+        println(response.body.string())
         check(response.code == 200)
     } catch (e: Exception) {
         Logger.warn(e, "Exception while stopping charging: ")
@@ -157,7 +157,7 @@ private fun readSolarPanelPower(
     client: OkHttpClient
 ): Int = try {
     val request = Request.Builder().url(FRONIUS_API_URL).build()
-    val body = client.newCall(request).execute().body!!
+    val body = client.newCall(request).execute().body
     JsonParser.parseString(body.string())
         .asJsonObject.get("Body")
         .asJsonObject.get("Data")
@@ -174,7 +174,7 @@ private fun readWallboxPower(
     client: OkHttpClient,
 ): Int = try {
     val request = Request.Builder().url(WALLBOX_POWER_DRAW_URL).build()
-    val body = client.newCall(request).execute().body!!
+    val body = client.newCall(request).execute().body
     JsonParser.parseString(body.string())
         .asJsonObject.get("power")
         .asInt

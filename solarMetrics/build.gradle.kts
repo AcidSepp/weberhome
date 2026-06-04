@@ -1,6 +1,7 @@
 plugins {
-    kotlin("jvm") version "1.9.20"
+    alias(libs.plugins.kotlin)
     application
+    java
 }
 
 group = "de.weberhome"
@@ -13,11 +14,12 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
 
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
-    implementation("com.influxdb:influxdb-client-java:6.9.0")
-    implementation("org.tinylog:tinylog:1.3.6")
-    implementation("com.ghgande:j2mod:3.1.1")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.gson)
+    implementation(libs.influxdb.client.java)
+    implementation(libs.j2mod)
+    implementation(libs.okhttp)
+    implementation(libs.tinylog.impl)
+    implementation(libs.tinylog.api)
 }
 
 tasks.test {
@@ -29,5 +31,11 @@ application {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }

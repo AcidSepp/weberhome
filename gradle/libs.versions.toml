@@ -1,0 +1,26 @@
+[versions]
+gson = "2.14.0"
+influxdb-client-java = "8.0.0"
+j2mod = "3.3.0"
+okhttp = "5.3.2"
+tinylog = "2.7.0"
+ktor = "3.5.0"
+kotlin = "2.3.21"
+kotlin-serialization = "2.4.0"
+
+
+[libraries]
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+influxdb-client-java = { module = "com.influxdb:influxdb-client-java", version.ref = "influxdb-client-java" }
+j2mod = { module = "com.ghgande:j2mod", version.ref = "j2mod" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+tinylog-impl = { module = "org.tinylog:tinylog-impl", version.ref = "tinylog" }
+tinylog-api = { module = "org.tinylog:tinylog-api-kotlin", version.ref = "tinylog" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-serialization" }

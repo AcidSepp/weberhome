@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "de.weberhome"
-version = "1.0-SNAPSHOT"
+version = "0.8.0"
 
 repositories {
     mavenCentral()
@@ -31,5 +31,18 @@ kotlin {
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+distributions {
+    main {
+        contents {
+            from("solarMetrics.service") {
+                filter { it.replace("VERSION_PLACEHOLDER", project.version.toString()) }
+            }
+            from("deploy.sh") {
+                filter { it.replace("VERSION_PLACEHOLDER", project.version.toString()) }
+            }
+        }
     }
 }

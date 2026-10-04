@@ -3,7 +3,7 @@ Description=Solar to InfluxDB Service
 After=syslog.target network.target
 
 [Service]
-WorkingDirectory=/home/yannick/mitterweg7/charging-1.0-SNAPSHOT/
+WorkingDirectory=/home/yannick/mitterweg7/charging-0.4.0-SNAPSHOT/
 SuccessExitStatus=143
 User=yannick
 Type=simple

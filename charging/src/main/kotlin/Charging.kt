@@ -10,6 +10,7 @@ import java.time.Duration
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.scheduleAtFixedRate
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 private const val FRONIUS_API_URL =
@@ -26,6 +27,8 @@ private const val WALLBOX_STOP_CHARGE_URL =
 private const val VARTA_BATTERIE = "varta-batterie"
 
 private const val MIN_OVERPRODUCTION_MILLI_AMPS = 6000
+
+fun Int.almostEquals(other: Int, delta: Int) = abs(this - other) < delta
 
 fun main() {
 
@@ -72,7 +75,7 @@ Charging version 0.4.0
             val overProductionWatts =
                 solarPanelPowerWatts - powerUsage + wallboxPowerWatts
             val nextChargingCurrentMilliAmps =
-                powerToMilliAmps(overProductionWatts).coerceAtMost(15_000f)
+                powerToMilliAmps(overProductionWatts).coerceAtMost(15_000f).toInt()
 
             Logger.info(
                 """
@@ -84,7 +87,7 @@ Charging version 0.4.0
                     - Power usage: ${powerUsage}W
                     - Overproduction: ${overProductionWatts}W
                     - Next Charging Power: ${overProductionWatts}W
-                    - Next ChargingEnabled Current: ${nextChargingCurrentMilliAmps.toInt()}mA
+                    - Next ChargingEnabled Current: ${nextChargingCurrentMilliAmps}mA
                 """.trimIndent()
             )
 
@@ -92,7 +95,7 @@ Charging version 0.4.0
                 client.stopCharge()
             } else {
                 client.startCharge()
-                client.setGlobalCurrent(nextChargingCurrentMilliAmps.toInt())
+                client.setGlobalCurrent(nextChargingCurrentMilliAmps)
             }
         } else {
             client.setGlobalCurrent(16_000)
@@ -103,9 +106,9 @@ Charging version 0.4.0
 private fun powerToMilliAmps(powerWatts: Int) =
     (powerWatts / (400f * sqrt(3f))) * 1000f
 
-private fun OkHttpClient.setGlobalCurrent(nextChargingCurrentMilliAmps: Int) {
-    Logger.info("Updating charge current to ${nextChargingCurrentMilliAmps}mA.")
-    val jsonString = "{\"current\":${nextChargingCurrentMilliAmps}}"
+private fun OkHttpClient.setGlobalCurrent(desiredGlobalCurrent: Int) {
+    Logger.info("Updating charge current to ${desiredGlobalCurrent}mA.")
+    val jsonString = "{\"current\":${desiredGlobalCurrent}}"
     val mediaType = "application/json; charset=utf-8".toMediaType()
     val requestBody: RequestBody = jsonString.toRequestBody(mediaType)
 
@@ -118,8 +121,13 @@ private fun OkHttpClient.setGlobalCurrent(nextChargingCurrentMilliAmps: Int) {
             .execute()
         println(response.body.string())
         check(response.code == 200)
-        check(nextChargingCurrentMilliAmps == this.getGlobalCurrent())
-        Logger.info("Successfully updated charge current to ${nextChargingCurrentMilliAmps}mA.")
+        val actualGlobalCurrent = this.getGlobalCurrent()
+
+        if (desiredGlobalCurrent.almostEquals(actualGlobalCurrent, 50)) {
+            Logger.error("Actual charge current (${actualGlobalCurrent}mA) does not match the desired current (${desiredGlobalCurrent}mA)")
+        } else {
+            Logger.info("Successfully updated charge current to ${desiredGlobalCurrent}mA.")
+        }
     } catch (e: Exception) {
         Logger.warn(
             e,

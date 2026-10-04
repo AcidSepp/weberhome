@@ -1,9 +1,9 @@
 [Unit]
-Description=Solar to InfluxDB Service
+Description=Overproduction Charging Service
 After=syslog.target network.target
 
 [Service]
-WorkingDirectory=/home/yannick/weberhome/charging/build/install/charging/bin
+WorkingDirectory=/home/yannick/mitterweg7/charging-VERSION_PLACEHOLDER/bin
 SuccessExitStatus=143
 User=yannick
 Type=simple

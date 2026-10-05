@@ -7,7 +7,7 @@ SuccessExitStatus=143
 User=yannick
 Type=simple
 
-ExecStart=/bin/bash /home/yannick/mitterweg7/solarMetrics-VERSION_PLACEHOLDER/bin/solarMetrics
+ExecStart=/bin/bash /home/yannick/mitterweg7/solarMetrics/bin/solarMetrics
 ExecStop=/bin/kill -15 $MAINPID
 
 Restart=always

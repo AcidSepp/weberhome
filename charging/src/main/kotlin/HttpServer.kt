@@ -13,14 +13,13 @@ import java.io.File
 
 class HttpServer(private val state: State, private val port: Int = 8888, private val host: String = "0.0.0.0") {
     fun start() {
-        val static = File("static")
         embeddedServer(Netty, port = port, host = host) {
             install(ContentNegotiation) {
                 json()
             }
             routing {
-                staticFiles("/", static) {
-                    default("src/dist/static/index.html")
+                staticResources("/", "static") {
+                    default("index.html")
                 }
                 get("/state") {
                     call.respond(StateResponse(state.solarOverProductionCharging.get()))

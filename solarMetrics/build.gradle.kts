@@ -37,12 +37,8 @@ java {
 distributions {
     main {
         contents {
-            from("solarMetrics.service") {
-                filter { it.replace("VERSION_PLACEHOLDER", project.version.toString()) }
-            }
-            from("deploy.sh") {
-                filter { it.replace("VERSION_PLACEHOLDER", project.version.toString()) }
-            }
+            from("solarMetrics.service")
+            from("deploy.sh")
         }
     }
 }

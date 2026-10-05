@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Überstromladen</title>
+    <style>
+        .toggle-switch {
+          position: relative;
+          width: 50px;
+          height: 24px;
+          display: inline-block;
+        }
+        .toggle-switch input {
+          display: none;
+        }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: 0.4s;
+          border-radius: 24px;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 20px;
+          width: 20px;
+          left: 2px;
+          bottom: 2px;
+          background-color: white;
+          transition: 0.4s;
+          border-radius: 50%;
+        }
+        input:checked + .slider {
+          background-color: #4CAF50;
+        }
+        input:checked + .slider:before {
+          transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+
+<h1>Überstromladen</h1>
+<label class="toggle-switch">
+    <input type="checkbox" id="toggleSwitch">
+    <span class="slider"></span>
+</label>
+
+<script>
+    // Function to load the initial state from /state
+    async function loadState() {
+      try {
+        const response = await fetch('/state');
+        if (!response.ok) throw new Error("Failed to load state");
+        const data = await response.json();
+        document.getElementById('toggleSwitch').checked = data.solarOverProductionCharging;
+      } catch (error) {
+        console.error("Error loading state:", error);
+      }
+    }
+
+    // Function to update the state on the server
+    async function updateState(isCharging) {
+      try {
+        await fetch('/state', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ solarOverProductionCharging: isCharging })
+        });
+      } catch (error) {
+        console.error("Error updating state:", error);
+      }
+    }
+
+    // Event listener for toggle switch
+    document.getElementById('toggleSwitch').addEventListener('change', (event) => {
+      updateState(event.target.checked);
+    });
+
+    // Load initial state when the page loads
+    window.addEventListener('load', loadState);
+</script>
+
+</body>
+</html>

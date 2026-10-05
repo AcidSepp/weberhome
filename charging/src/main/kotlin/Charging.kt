@@ -42,7 +42,7 @@ fun main() {
 \/    \/_|\__|\__\___|_|    \_/\_/ \___|\__, |  /_/   
                                         |___/                  
 
-Charging version 0.4.0
+Charging version 0.5.0
 ---
     """.trimIndent()
     )

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "de.weberhome"
-version = "0.4.0"
+version = "0.5.0"
 
 repositories {
     mavenCentral()
@@ -51,12 +51,8 @@ java {
 distributions {
     main {
         contents {
-            from("charging.service") {
-                filter { it.replace("VERSION_PLACEHOLDER", project.version.toString()) }
-            }
-            from("deploy.sh") {
-                filter { it.replace("VERSION_PLACEHOLDER", project.version.toString()) }
-            }
+            from("charging.service")
+            from("deploy.sh")
         }
     }
 }

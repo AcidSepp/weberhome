@@ -3,7 +3,7 @@ Description=Overproduction Charging Service
 After=syslog.target network.target
 
 [Service]
-WorkingDirectory=/home/yannick/mitterweg7/charging-VERSION_PLACEHOLDER/bin
+WorkingDirectory=/home/yannick/mitterweg7/charging/bin
 SuccessExitStatus=143
 User=yannick
 Type=simple

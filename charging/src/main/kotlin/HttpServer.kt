@@ -12,6 +12,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.tinylog.kotlin.Logger
+import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -52,8 +53,22 @@ class HttpServer(
                 }
 
                 post("/sessions") {
+                    val session = call.receive<Session>()
+
+                    if (session.start < Clock.System.now()) {
+                        call.respond(HttpStatusCode.BadRequest, "'start' must not be in the past.")
+                    }
+
+                    if (session.stop < Clock.System.now()) {
+                        call.respond(HttpStatusCode.BadRequest, "'stop' must not be in the past.")
+                    }
+
+                    if (session.stop < session.start) {
+                        call.respond(HttpStatusCode.BadRequest, "'start' must happen before 'stop'.")
+                    }
+
                     val uuid =
-                        charging.scheduleSession(call.receive<Session>())
+                        charging.scheduleSession(session)
                     call.respond(HttpStatusCode.Created, "/sessions/$uuid")
                 }
             }

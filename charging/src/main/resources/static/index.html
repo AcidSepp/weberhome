@@ -5,136 +5,410 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Überstromladen</title>
     <style>
+        :root {
+            --bg: #f4f6f8;
+            --card: #ffffff;
+            --text: #1f2933;
+            --muted: #6b7785;
+            --border: #e3e7eb;
+            --accent: #2e9d5b;
+            --accent-soft: #e3f4ea;
+            --danger: #c0392b;
+            --radius: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #12161a;
+                --card: #1b2127;
+                --text: #e6e9ec;
+                --muted: #8a96a3;
+                --border: #2a323a;
+                --accent: #3fbf73;
+                --accent-soft: #1f3a2a;
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 32px 16px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.5;
+        }
+
+        main {
+            max-width: 860px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+        }
+
+        h1 { margin: 0 0 4px; font-size: 1.75rem; }
+        h2 { margin: 0 0 16px; font-size: 1.1rem; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Toggle row */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .toggle-row p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
         .toggle-switch {
             position: relative;
             width: 50px;
-            height: 24px;
-            display: inline-block;
+            height: 28px;
+            flex-shrink: 0;
         }
 
-        .toggle-switch input {
-            display: none;
-        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
 
         .slider {
             position: absolute;
+            inset: 0;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: 0.4s;
-            border-radius: 24px;
+            background: #c4cbd2;
+            border-radius: 28px;
+            transition: background 0.25s;
         }
 
-        .slider:before {
-            position: absolute;
+        .slider::before {
             content: "";
-            height: 20px;
-            width: 20px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: 0.4s;
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
             border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+            transition: transform 0.25s;
         }
 
-        input:checked + .slider {
-            background-color: #4CAF50;
+        input:checked + .slider { background: var(--accent); }
+        input:checked + .slider::before { transform: translateX(22px); }
+        input:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+        /* Form */
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
         }
 
-        input:checked + .slider:before {
-            transform: translateX(26px);
+        label.field { display: grid; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+
+        input[type="datetime-local"] {
+            padding: 9px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font: inherit;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: 0;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover { filter: brightness(1.08); }
+
+        button.delete {
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        button.delete:hover { background: var(--danger); color: #fff; filter: none; }
+        button:disabled { opacity: 0.6; cursor: default; }
+
+        .message { margin: 10px 0 0; font-size: 0.85rem; min-height: 1.2em; }
+        .message.error { color: var(--danger); }
+        .message.ok { color: var(--accent); }
+
+        /* Table */
+        .table-wrap { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+
+        th, td { padding: 10px 12px; text-align: left; white-space: nowrap; }
+
+        th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr + tr td { border-top: 1px solid var(--border); }
+        tbody tr:hover { background: var(--bg); }
+
+        .date { display: block; }
+        .time { display: block; color: var(--muted); font-size: 0.82rem; }
+
+        .uuid {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            background: var(--border);
+            color: var(--muted);
+        }
+
+        .badge.active { background: var(--accent-soft); color: var(--accent); }
+
+        .empty { text-align: center; color: var(--muted); padding: 24px; }
+
+        @media (max-width: 600px) {
+            form { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+<main>
+    <header>
+        <h1>Überstromladen</h1>
+    </header>
 
-<h1>Überstromladen</h1>
-<label class="toggle-switch">
-    <input type="checkbox" id="toggleSwitch">
-    <span class="slider"></span>
-</label>
+    <section class="card toggle-row">
+        <div>
+            <h2 style="margin:0">Solar-Überschussladen</h2>
+            <p>Lädt automatisch bei PV-Überproduktion.</p>
+        </div>
+        <label class="toggle-switch">
+            <input type="checkbox" id="toggleSwitch" aria-label="Solar-Überschussladen">
+            <span class="slider"></span>
+        </label>
+    </section>
 
-<table id="sessions">
-    <tr>
-        <td>
-            Start
-        </td>
-        <td>
-            Stop
-        </td>
-        <td>
-            UUID
-        </td>
-        <td>
-            Active
-        </td>
-    </tr>
-</table>
+    <section class="card">
+        <h2>Neue Session</h2>
+        <form id="sessionForm">
+            <label class="field">Start
+                <input type="datetime-local" id="startInput" required>
+            </label>
+            <label class="field">Stop
+                <input type="datetime-local" id="stopInput" required>
+            </label>
+            <button type="submit">Hinzufügen</button>
+        </form>
+        <p class="message" id="formMessage"></p>
+    </section>
+
+    <section class="card">
+        <h2>Sessions</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Start</th>
+                    <th>Stop</th>
+                    <th>UUID</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="sessions"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
 
 <script>
-    // Function to load the initial state from /state
+    const dateFmt = new Intl.DateTimeFormat('de-DE', {weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric'});
+    const timeFmt = new Intl.DateTimeFormat('de-DE', {hour: '2-digit', minute: '2-digit', timeZoneName: 'short'});
+
+    // Render a UTC timestamp in the browser's local time; full UTC value in the tooltip
+    function timestampCell(value) {
+        const td = document.createElement('td');
+        if (!value) {
+            td.textContent = '–';
+            return td;
+        }
+        const d = new Date(value);
+        if (isNaN(d)) {
+            td.textContent = value;
+            return td;
+        }
+        td.title = d.toISOString();
+        const date = document.createElement('span');
+        date.className = 'date';
+        date.textContent = dateFmt.format(d);
+        const time = document.createElement('span');
+        time.className = 'time';
+        time.textContent = timeFmt.format(d);
+        td.append(date, time);
+        return td;
+    }
+
+    function renderSessions(sessions) {
+        const tbody = document.getElementById('sessions');
+        tbody.replaceChildren();
+
+        if (!sessions || sessions.length === 0) {
+            const row = tbody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 5;
+            cell.className = 'empty';
+            cell.textContent = 'Keine Sessions vorhanden';
+            return;
+        }
+
+        sessions
+            .slice()
+            .sort((a, b) => new Date(b.start) - new Date(a.start))
+            .forEach((session) => {
+                const row = document.createElement('tr');
+
+                const uuidCell = document.createElement('td');
+                uuidCell.className = 'uuid';
+                uuidCell.textContent = session.uuid;
+
+                const statusCell = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = 'badge' + (session.active ? ' active' : '');
+                badge.textContent = session.active ? 'Aktiv' : 'Inaktiv';
+                statusCell.appendChild(badge);
+
+                const actionCell = document.createElement('td');
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'delete';
+                deleteButton.textContent = 'Löschen';
+                deleteButton.addEventListener('click', () => deleteSession(session.uuid, deleteButton));
+                actionCell.appendChild(deleteButton);
+
+                row.append(timestampCell(session.start), timestampCell(session.stop), uuidCell, statusCell, actionCell);
+                tbody.appendChild(row);
+            });
+    }
+
     async function loadState() {
         try {
             const response = await fetch('/state');
-            if (!response.ok) throw new Error("Failed to load state");
+            if (!response.ok) throw new Error('Failed to load state');
             const data = await response.json();
             document.getElementById('toggleSwitch').checked = data.solarOverProductionCharging;
-
-
-            data.sessions.forEach(
-                (session) => {
-                    const row = document.createElement(`tr`)
-
-                    const startCell = document.createElement("td")
-                    startCell.innerText = session.start
-
-                    const stopCell = document.createElement("td")
-                    stopCell.innerText = session.stop
-
-                    const uuidCell = document.createElement("td")
-                    uuidCell.innerText = session.uuid
-
-                    const statusCell = document.createElement("td")
-                    statusCell.innerText = session.active
-
-                    row.appendChild(startCell)
-                    row.appendChild(stopCell)
-                    row.appendChild(uuidCell)
-                    row.appendChild(statusCell)
-
-                    document.getElementById("sessions").appendChild(row)
-                }
-            )
-
+            renderSessions(data.sessions);
         } catch (error) {
-            console.error("Error loading state:", error);
+            console.error('Error loading state:', error);
         }
     }
 
-    // Function to update the state on the server
     async function updateState(isCharging) {
         try {
-            await fetch('/state', {
+            await fetch('/overproductingCharging', {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({solarOverProductionCharging: isCharging})
             });
         } catch (error) {
-            console.error("Error updating state:", error);
+            console.error('Error updating state:', error);
         }
     }
 
-    // Event listener for toggle switch
-    document.getElementById('toggleSwitch').addEventListener('change', (event) => {
-        updateState(event.target.checked);
-    });
+    function showMessage(text, type) {
+        const el = document.getElementById('formMessage');
+        el.textContent = text;
+        el.className = 'message ' + (type || '');
+    }
 
-    // Load initial state when the page loads
+    // datetime-local values are local time; new Date() parses them as local, toISOString() yields UTC
+    async function addSession(event) {
+        event.preventDefault();
+        const start = new Date(document.getElementById('startInput').value);
+        const stop = new Date(document.getElementById('stopInput').value);
+
+        if (stop <= start) {
+            showMessage('Stop muss nach Start liegen.', 'error');
+            return;
+        }
+
+        const button = event.target.querySelector('button');
+        button.disabled = true;
+        try {
+            const response = await fetch('/sessions', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({start: start.toISOString(), stop: stop.toISOString()})
+            });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            setDefaultDates();
+            showMessage('Session hinzugefügt.', 'ok');
+            await loadState();
+        } catch (error) {
+            console.error('Error adding session:', error);
+            showMessage('Session konnte nicht gespeichert werden.', 'error');
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    async function deleteSession(uuid, button) {
+        button.disabled = true;
+        try {
+            const response = await fetch('/sessions/' + encodeURIComponent(uuid), {method: 'DELETE'});
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            await loadState();
+        } catch (error) {
+            console.error('Error deleting session:', error);
+            alert('Session konnte nicht gelöscht werden.');
+            button.disabled = false;
+        }
+    }
+
+    // Format a Date as local "YYYY-MM-DDTHH:MM" for datetime-local inputs
+    function toLocalInputValue(d) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    // Default: today, start = now, stop = one hour later
+    function setDefaultDates() {
+        const now = new Date();
+        now.setSeconds(0, 0);
+        const later = new Date(now.getTime() + 60 * 60 * 1000);
+        document.getElementById('startInput').value = toLocalInputValue(now);
+        document.getElementById('stopInput').value = toLocalInputValue(later);
+    }
+
+    setDefaultDates();
+
+    document.getElementById('toggleSwitch').addEventListener('change', (e) => updateState(e.target.checked));
+    document.getElementById('sessionForm').addEventListener('submit', addSession);
     window.addEventListener('load', loadState);
 </script>
-
 </body>
 </html>

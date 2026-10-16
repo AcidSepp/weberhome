@@ -52,21 +52,20 @@ class HttpServer(
                         call.receive<OverproductionChargingRequest>()
                     charging.overProductionCharging =
                         requestBody.solarOverProductionCharging
+                    call.respond(HttpStatusCode.OK)
                 }
 
                 post("/sessions") {
                     val session = call.receive<Session>()
 
-                    if (session.start < Clock.System.now()) {
-                        call.respond(HttpStatusCode.BadRequest, "'start' must not be in the past.")
-                    }
-
                     if (session.stop < Clock.System.now()) {
                         call.respond(HttpStatusCode.BadRequest, "'stop' must not be in the past.")
+                        return@post
                     }
 
                     if (session.stop < session.start) {
                         call.respond(HttpStatusCode.BadRequest, "'start' must happen before 'stop'.")
+                        return@post
                     }
 
                     val uuid =
@@ -78,7 +77,7 @@ class HttpServer(
                     val uuidString = call.pathParameters["id"]!!
                     val uuid = Uuid.parse(uuidString)
                     charging.cancelSession(uuid)
-                    call.respond(HttpStatusCode.Accepted)
+                    call.respond(HttpStatusCode.OK)
                 }
             }
         }.start(wait = false)

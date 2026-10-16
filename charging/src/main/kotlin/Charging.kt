@@ -12,9 +12,9 @@ import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.scheduleAtFixedRate
-import kotlin.math.abs
 import kotlin.math.sqrt
 import kotlin.time.Clock.System.now
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -35,7 +35,16 @@ private const val MIN_OVERPRODUCTION_MILLI_AMPS = 6000
 
 class Charging {
 
-    private val sessions: ConcurrentHashMap<Uuid, Session> = ConcurrentHashMap()
+    data class InternalSession(
+        val uuid: Uuid,
+        val start: Instant,
+        val stop: Instant,
+        val startTimerTask: TimerTask,
+        val stopTimerTask: TimerTask,
+    )
+
+    private val sessions: ConcurrentHashMap<Uuid, InternalSession> =
+        ConcurrentHashMap()
 
     @Volatile
     var overProductionCharging = true
@@ -123,7 +132,6 @@ class Charging {
 
     fun scheduleSession(session: Session): Uuid {
         val uuid = Uuid.random()
-        sessions[uuid] = session
         val startSession = object : TimerTask() {
             override fun run() {
                 Logger.info("Disable overProductionCharging, because charging session '$uuid' has started.")
@@ -147,16 +155,30 @@ class Charging {
         )
 
         Logger.info("Scheduled session '$uuid' from '${session.start}' to '${session.stop}'.")
+        sessions[uuid] = InternalSession(
+            uuid,
+            session.start,
+            session.stop,
+            startSession,
+            stopSession
+        )
         return uuid
+    }
+
+    fun cancelSession(uuid: Uuid) {
+        val session = sessions[uuid]
+        if (session != null) {
+            session.startTimerTask.cancel()
+            session.stopTimerTask.cancel()
+            Logger.info("Cancelled session '$uuid' from '${session.start}' to '${session.stop}'.")
+        }
+        sessions.remove(uuid)
     }
 
     companion object {
         val timer = Timer()
     }
 }
-
-private fun powerToMilliAmps(powerWatts: Int) =
-    (powerWatts / (400f * sqrt(3f))) * 1000f
 
 private fun OkHttpClient.setGlobalCurrent(desiredGlobalCurrent: Int) {
     Logger.info("Updating charge current to ${desiredGlobalCurrent}mA.")

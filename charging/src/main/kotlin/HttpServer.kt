@@ -12,9 +12,11 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.tinylog.kotlin.Logger
+import java.util.TimerTask
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class HttpServer(
     val charging: Charging,
@@ -70,6 +72,13 @@ class HttpServer(
                     val uuid =
                         charging.scheduleSession(session)
                     call.respond(HttpStatusCode.Created, "/sessions/$uuid")
+                }
+
+                delete("/sessions/{id}") {
+                    val uuidString = call.pathParameters["id"]!!
+                    val uuid = Uuid.parse(uuidString)
+                    charging.cancelSession(uuid)
+                    call.respond(HttpStatusCode.Accepted)
                 }
             }
         }.start(wait = false)

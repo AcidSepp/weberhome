@@ -24,6 +24,12 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
 
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.junit.api)
+    testImplementation(libs.junit.engine)
+    testImplementation(libs.junit.launcher)
+    testImplementation(libs.assertj)
+
     runtimeOnly("org.tinylog:slf4j-tinylog:2.7.0")
     runtimeOnly("org.tinylog:jul-tinylog:2.7.0")
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
@@ -56,4 +62,9 @@ distributions {
             from("deploy.sh")
         }
     }
+}
+
+tasks.test {
+    useJUnit()
+    useJUnitPlatform()
 }

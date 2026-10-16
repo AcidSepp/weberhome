@@ -33,11 +33,6 @@ private const val VARTA_BATTERIE = "varta-batterie"
 
 private const val MIN_OVERPRODUCTION_MILLI_AMPS = 6000
 
-private fun Int.almostEquals(
-    other: Int,
-    delta: Int,
-) = abs(this - other) < delta
-
 class Charging {
 
     private val sessions: ConcurrentHashMap<Uuid, Session> = ConcurrentHashMap()
@@ -127,8 +122,11 @@ class Charging {
     }
 
     fun scheduleSession(session: Session): Uuid {
+        val uuid = Uuid.random()
+        sessions[uuid] = session
         val startSession = object : TimerTask() {
             override fun run() {
+                Logger.info("Disable overProductionCharging, because charging session '$uuid' has started.")
                 overProductionCharging = false
             }
         }
@@ -139,6 +137,7 @@ class Charging {
 
         val stopSession = object : TimerTask() {
             override fun run() {
+                Logger.info("Enable overProductionCharging, because charging session '$uuid' has stopped.")
                 overProductionCharging = true
             }
         }
@@ -147,8 +146,7 @@ class Charging {
             session.stop.toJavaDate()
         )
 
-        val uuid = Uuid.random()
-        sessions[uuid] = session
+        Logger.info("Scheduled session '$uuid' from '${session.start}' to '${session.stop}'.")
         return uuid
     }
 
@@ -175,11 +173,11 @@ private fun OkHttpClient.setGlobalCurrent(desiredGlobalCurrent: Int) {
             .execute()
         println(response.body.string())
         check(response.code == 200)
-        val actualGlobalCurrent = this.getGlobalCurrent()
+        val actualGlobalCurrent = getGlobalCurrent()
 
-        if (desiredGlobalCurrent.almostEquals(
+        if (!desiredGlobalCurrent.almostEquals(
                 actualGlobalCurrent,
-                50
+                500
             )
         ) {
             Logger.error("Actual charge current (${actualGlobalCurrent}mA) does not match the desired current (${desiredGlobalCurrent}mA)")

@@ -1,0 +1,3 @@
+GET /state
+Host: localhost:8888
+Accept: application/json

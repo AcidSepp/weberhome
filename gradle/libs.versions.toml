@@ -1,31 +1,37 @@
 [versions]
+assertj = "3.27.7"
 gson = "2.14.0"
 influxdb-client-java = "8.0.0"
 j2mod = "3.3.0"
-okhttp = "5.3.2"
-tinylog = "2.7.0"
-ktor = "3.5.0"
+jul-tinylog = "2.7.0"
+junit-jupiter = "6.0.2"
 kotlin = "2.3.21"
 kotlin-serialization = "2.4.0"
-junit-jupiter = "6.0.2"
-assertj = "3.27.7"
+kotlinx-datetime = "0.8.0"
+ktor = "3.5.0"
+okhttp = "5.3.2"
+slf4j-tinylog = "2.7.0"
+tinylog = "2.7.0"
 
 [libraries]
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
-junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-jupiter" }
-junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter" }
-junit-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-jupiter" }
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj"}
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 influxdb-client-java = { module = "com.influxdb:influxdb-client-java", version.ref = "influxdb-client-java" }
 j2mod = { module = "com.ghgande:j2mod", version.ref = "j2mod" }
-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-tinylog-impl = { module = "org.tinylog:tinylog-impl", version.ref = "tinylog" }
-tinylog-api = { module = "org.tinylog:tinylog-api-kotlin", version.ref = "tinylog" }
+jul-tinylog = { module = "org.tinylog:jul-tinylog", version.ref = "jul-tinylog" }
+junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-jupiter" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-jupiter" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+slf4j-tinylog = { module = "org.tinylog:slf4j-tinylog", version.ref = "slf4j-tinylog" }
+tinylog-api = { module = "org.tinylog:tinylog-api-kotlin", version.ref = "tinylog" }
+tinylog-impl = { module = "org.tinylog:tinylog-impl", version.ref = "tinylog" }
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

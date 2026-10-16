@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "de.weberhome"
-version = "0.5.0"
+version = "0.6.0"
 
 repositories {
     mavenCentral()
@@ -30,9 +30,9 @@ dependencies {
     testImplementation(libs.junit.launcher)
     testImplementation(libs.assertj)
 
-    runtimeOnly("org.tinylog:slf4j-tinylog:2.7.0")
-    runtimeOnly("org.tinylog:jul-tinylog:2.7.0")
-    runtimeOnly("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
+    runtimeOnly(libs.jul.tinylog)
+    runtimeOnly(libs.kotlinx.datetime)
+    runtimeOnly(libs.slf4j.tinylog)
 }
 
 configurations.all {

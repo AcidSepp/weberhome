@@ -41,7 +41,7 @@ configurations.all {
 }
 
 application {
-    mainClass.set("ChargingKt")
+    mainClass.set("MainKt")
     applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
 }
 

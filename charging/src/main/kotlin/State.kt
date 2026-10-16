@@ -1,3 +1,1 @@
-import java.util.concurrent.atomic.AtomicBoolean
-
-class State(val solarOverProductionCharging: AtomicBoolean)
+class State(val solarOverProductionCharging: Boolean, val sessions: List<SessionWithId>)

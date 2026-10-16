@@ -26,6 +26,7 @@ dependencies {
 
     runtimeOnly("org.tinylog:slf4j-tinylog:2.7.0")
     runtimeOnly("org.tinylog:jul-tinylog:2.7.0")
+    runtimeOnly("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
 }
 
 configurations.all {

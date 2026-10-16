@@ -1,3 +1,6 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -9,35 +12,60 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.tinylog.kotlin.Logger
-import java.io.File
+import kotlin.time.Instant
+import kotlin.uuid.ExperimentalUuidApi
 
-class HttpServer(private val state: State, private val port: Int = 8888, private val host: String = "0.0.0.0") {
+class HttpServer(
+    val charging: Charging,
+    val port: Int = 8888,
+    private val host: String = "0.0.0.0",
+) {
+
     fun start() {
-        embeddedServer(Netty, port = port, host = host) {
+        embeddedServer(
+            Netty,
+            port = port,
+            host = host
+        ) {
             install(ContentNegotiation) {
                 json()
             }
             routing {
-                staticResources("/", "static") {
+                staticResources(
+                    "/",
+                    "static"
+                ) {
                     default("index.html")
                 }
+
                 get("/state") {
-                    call.respond(StateResponse(state.solarOverProductionCharging.get()))
+                    call.respond(
+                        charging.getState()
+                    )
                 }
-                put("/state") {
-                    val requestBody = call.receive<StateResponse>()
-                    state.solarOverProductionCharging.set(requestBody.solarOverProductionCharging)
-                    if (requestBody.solarOverProductionCharging) {
-                        Logger.info("Enabled solar overproduction charging." )
-                    } else {
-                        Logger.info("Disabled solar overproduction charging." )
-                    }
+
+                put("/overproductingCharging") {
+                    val requestBody =
+                        call.receive<OverproductionChargingRequest>()
+                    charging.overProductionCharging =
+                        requestBody.solarOverProductionCharging
+                }
+
+                post("/sessions") {
+                    val uuid =
+                        charging.scheduleSession(call.receive<Session>())
+                    call.respond(HttpStatusCode.Created, "/sessions/$uuid")
                 }
             }
         }.start(wait = false)
-        Logger.info("HttpServer is listening on '$host:$port'" )
+        Logger.info("HttpServer is listening on '$host:$port'")
     }
 }
 
 @Serializable
-data class StateResponse(var solarOverProductionCharging: Boolean)
+data class OverproductionChargingRequest(
+    var solarOverProductionCharging: Boolean,
+)
+
+@Serializable
+data class Session(val start: Instant, val stop: Instant)

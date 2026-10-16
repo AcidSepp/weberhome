@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 import com.ghgande.j2mod.modbus.facade.ModbusTCPMaster
 import com.google.gson.JsonParser
 import okhttp3.MediaType.Companion.toMediaType
@@ -8,10 +10,13 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.tinylog.kotlin.Logger
 import java.time.Duration
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.scheduleAtFixedRate
 import kotlin.math.abs
 import kotlin.math.sqrt
+import kotlin.time.Clock.System.now
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 private const val FRONIUS_API_URL =
     "http://fronius-wechselrichter/solar_api/v1/GetPowerFlowRealtimeData.fcgi"
@@ -28,57 +33,58 @@ private const val VARTA_BATTERIE = "varta-batterie"
 
 private const val MIN_OVERPRODUCTION_MILLI_AMPS = 6000
 
-fun Int.almostEquals(other: Int, delta: Int) = abs(this - other) < delta
+private fun Int.almostEquals(
+    other: Int,
+    delta: Int,
+) = abs(this - other) < delta
 
-fun main() {
+class Charging {
 
-    println(
-        """
----
-        _ _   _                                 _____ 
-  /\/\ (_) |_| |_ ___ _ ____      _____  __ _  |___  |
- /    \| | __| __/ _ \ '__\ \ /\ / / _ \/ _` |    / / 
-/ /\/\ \ | |_| ||  __/ |   \ V  V /  __/ (_| |   / /  
-\/    \/_|\__|\__\___|_|    \_/\_/ \___|\__, |  /_/   
-                                        |___/                  
+    private val sessions: ConcurrentHashMap<Uuid, Session> = ConcurrentHashMap()
 
-Charging version 0.5.0
----
-    """.trimIndent()
-    )
+    @Volatile
+    var overProductionCharging = true
+        set(value) {
+            if (value) {
+                Logger.info("Enabled solar overproduction charging.")
+            } else {
+                Logger.info("Disabled solar overproduction charging.")
+            }
+            field = value
+        }
 
-    val state = State(AtomicBoolean(true))
-    HttpServer(state).start()
+    fun start() {
+        val master = ModbusTCPMaster(
+            VARTA_BATTERIE,
+            502
+        )
+        master.connect()
 
-    val master = ModbusTCPMaster(
-        VARTA_BATTERIE,
-        502
-    )
-    master.connect()
+        val client = OkHttpClient.Builder()
+            .build()
 
-    val client = OkHttpClient.Builder()
-        .build()
+        timer.scheduleAtFixedRate(
+            0L,
+            Duration.ofSeconds(30)
+                .toMillis()
+        ) {
+            if (overProductionCharging) {
+                val batteryChargingPowerWatts =
+                    master.readBatteryChargingPower()
+                val gridPowerWatts = master.readGridPower()
+                val solarPanelPowerWatts = client.readSolarPanelPower()
+                val wallboxPowerWatts = client.readWallboxPower()
 
-    Timer().scheduleAtFixedRate(
-        0L,
-        Duration.ofSeconds(30)
-            .toMillis()
-    ) {
-        if (state.solarOverProductionCharging.get()) {
-            val batteryChargingPowerWatts = master.readBatteryChargingPower()
-            val gridPowerWatts = master.readGridPower()
-            val solarPanelPowerWatts = client.readSolarPanelPower()
-            val wallboxPowerWatts = client.readWallboxPower()
+                val powerUsage =
+                    solarPanelPowerWatts - batteryChargingPowerWatts - gridPowerWatts
+                val overProductionWatts =
+                    solarPanelPowerWatts - powerUsage + wallboxPowerWatts
+                val nextChargingCurrentMilliAmps =
+                    powerToMilliAmps(overProductionWatts).coerceAtMost(15_000f)
+                        .toInt()
 
-            val powerUsage =
-                solarPanelPowerWatts - batteryChargingPowerWatts - gridPowerWatts
-            val overProductionWatts =
-                solarPanelPowerWatts - powerUsage + wallboxPowerWatts
-            val nextChargingCurrentMilliAmps =
-                powerToMilliAmps(overProductionWatts).coerceAtMost(15_000f).toInt()
-
-            Logger.info(
-                """
+                Logger.info(
+                    """
                 Setting charge based on solar power:
                     - Grid Power: ${gridPowerWatts}W
                     - Battery charging power: ${batteryChargingPowerWatts}W
@@ -89,17 +95,65 @@ Charging version 0.5.0
                     - Next Charging Power: ${overProductionWatts}W
                     - Next ChargingEnabled Current: ${nextChargingCurrentMilliAmps}mA
                 """.trimIndent()
-            )
+                )
 
-            if (nextChargingCurrentMilliAmps < MIN_OVERPRODUCTION_MILLI_AMPS) {
-                client.stopCharge()
+                if (nextChargingCurrentMilliAmps < MIN_OVERPRODUCTION_MILLI_AMPS) {
+                    client.stopCharge()
+                } else {
+                    client.startCharge()
+                    client.setGlobalCurrent(nextChargingCurrentMilliAmps)
+                }
             } else {
-                client.startCharge()
-                client.setGlobalCurrent(nextChargingCurrentMilliAmps)
+                client.setGlobalCurrent(16_000)
             }
-        } else {
-            client.setGlobalCurrent(16_000)
         }
+    }
+
+    fun getState(): State {
+        val sessions = sessions.map {
+            val active = it.value.start < now() && it.value.stop > now()
+            SessionWithId(
+                it.key,
+                it.value.start,
+                it.value.stop,
+                active
+            )
+        }
+            .toList()
+        return State(
+            overProductionCharging,
+            sessions
+        )
+    }
+
+    fun scheduleSession(session: Session): Uuid {
+        val startSession = object : TimerTask() {
+            override fun run() {
+                overProductionCharging = false
+            }
+        }
+        timer.schedule(
+            startSession,
+            session.start.toJavaDate()
+        )
+
+        val stopSession = object : TimerTask() {
+            override fun run() {
+                overProductionCharging = true
+            }
+        }
+        timer.schedule(
+            stopSession,
+            session.stop.toJavaDate()
+        )
+
+        val uuid = Uuid.random()
+        sessions[uuid] = session
+        return uuid
+    }
+
+    companion object {
+        val timer = Timer()
     }
 }
 
@@ -123,7 +177,11 @@ private fun OkHttpClient.setGlobalCurrent(desiredGlobalCurrent: Int) {
         check(response.code == 200)
         val actualGlobalCurrent = this.getGlobalCurrent()
 
-        if (desiredGlobalCurrent.almostEquals(actualGlobalCurrent, 50)) {
+        if (desiredGlobalCurrent.almostEquals(
+                actualGlobalCurrent,
+                50
+            )
+        ) {
             Logger.error("Actual charge current (${actualGlobalCurrent}mA) does not match the desired current (${desiredGlobalCurrent}mA)")
         } else {
             Logger.info("Successfully updated charge current to ${desiredGlobalCurrent}mA.")

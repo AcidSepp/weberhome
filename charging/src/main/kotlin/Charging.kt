@@ -46,6 +46,9 @@ class Charging {
     private val sessions: ConcurrentHashMap<Uuid, InternalSession> =
         ConcurrentHashMap()
 
+    private val client = OkHttpClient.Builder()
+        .build()
+
     @Volatile
     var overProductionCharging = true
         set(value) {
@@ -63,9 +66,6 @@ class Charging {
             502
         )
         master.connect()
-
-        val client = OkHttpClient.Builder()
-            .build()
 
         timer.scheduleAtFixedRate(
             0L,
@@ -135,6 +135,7 @@ class Charging {
         val startSession = object : TimerTask() {
             override fun run() {
                 Logger.info("Disable overProductionCharging, because charging session '$uuid' has started.")
+                client.startCharge()
                 overProductionCharging = false
             }
         }
@@ -171,6 +172,11 @@ class Charging {
             session.startTimerTask.cancel()
             session.stopTimerTask.cancel()
             Logger.info("Cancelled session '$uuid' from '${session.start}' to '${session.stop}'.")
+
+            if (session.start < now() && session.stop > now()) { // the session is currently active
+                // run the stop task manually, as it was unscheduled
+                session.stopTimerTask.run()
+            }
         }
         sessions.remove(uuid)
     }
@@ -181,7 +187,7 @@ class Charging {
 }
 
 private fun OkHttpClient.setGlobalCurrent(desiredGlobalCurrent: Int) {
-    Logger.info("Updating charge current to ${desiredGlobalCurrent}mA.")
+    Logger.debug("Updating charge current to ${desiredGlobalCurrent}mA.")
     val jsonString = "{\"current\":${desiredGlobalCurrent}}"
     val mediaType = "application/json; charset=utf-8".toMediaType()
     val requestBody: RequestBody = jsonString.toRequestBody(mediaType)

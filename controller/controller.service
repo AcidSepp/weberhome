@@ -1,0 +1,18 @@
+[Unit]
+Description=Smarthome Device Controller
+After=syslog.target network.target
+
+[Service]
+WorkingDirectory=/home/yannick/mitterweg7/controller/bin
+SuccessExitStatus=143
+User=yannick
+Type=simple
+
+ExecStart=/bin/bash ./controller
+ExecStop=/bin/kill -15 $MAINPID
+
+Restart=always
+RestartSec=60s
+
+[Install]
+WantedBy=multi-user.target

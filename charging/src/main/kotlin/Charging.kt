@@ -221,7 +221,7 @@ private fun OkHttpClient.setGlobalCurrent(desiredGlobalCurrent: Int) {
 }
 
 private fun OkHttpClient.getGlobalCurrent() = try {
-    Logger.info("Requesting charge current.")
+    Logger.debug("Requesting charge current.")
     val request = Request.Builder()
         .url(WALLBOX_CURRENT_URL)
         .get()
@@ -231,7 +231,7 @@ private fun OkHttpClient.getGlobalCurrent() = try {
     check(response.code == 200)
     val chargeCurrent =
         JsonParser.parseString(response.body.string()).asJsonObject.get("current").asInt
-    Logger.info("Successfully requested charge current: ${chargeCurrent}mA.")
+    Logger.debug("Successfully requested charge current: ${chargeCurrent}mA.")
     chargeCurrent
 } catch (e: Exception) {
     Logger.warn(

@@ -20,7 +20,7 @@ class DeviceTimer(
         try {
             turnOnJob()
         } catch (throwable: Throwable) {
-            Logger.error("$name: Error in turnOnJob.", throwable)
+            Logger.error(throwable, "$name: Error in turnOnJob.")
         }
     }
 
@@ -29,14 +29,15 @@ class DeviceTimer(
         try {
             turnOffJob()
         } catch (throwable: Throwable) {
-            Logger.error("$name: Error in turnOffJob.", throwable)
+            Logger.error(throwable, "$name: Error in turnOffJob.")
         }
     }
 
     private val turnOnExecutor: TaskExecutor =
         TaskExecutor(turnOnJobWrapped, turnOnHour, turnOnMinute, clock = clock)
-    private val turnOffExecutor: TaskExecutor =
-        TaskExecutor(turnOffJobWrapped, turnOffHour, turnOffMinute, clock = clock)
+    private val turnOffExecutor: TaskExecutor = TaskExecutor(
+        turnOffJobWrapped, turnOffHour, turnOffMinute, clock = clock
+    )
 
     fun start() {
         val currentZone: ZoneId = ZoneId.systemDefault()

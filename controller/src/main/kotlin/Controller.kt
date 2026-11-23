@@ -47,6 +47,4 @@ Controller version 0.2.0
         yannickBedroomController.turnOffAquariumLight()
     }, name = "Aquarium")
     aquariumTimer.start()
-
-    client.disconnect()
 }

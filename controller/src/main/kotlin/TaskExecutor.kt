@@ -20,11 +20,7 @@ class TaskExecutor(
     fun scheduleAtTargetTime() {
         val taskWrapper = {
             scheduleAtTargetTime()
-            try {
-                task()
-            } catch (throwable: Throwable) {
-                throwable.printStackTrace()
-            }
+            task()
         }
         zonedNextTargetTime = computeNextTargetTime()
         executorService.schedule(

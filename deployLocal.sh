@@ -7,7 +7,7 @@ DIR=/home/yannick/mitterweg7
 CHARGING_DIR=/home/yannick/IdeaProjects/weberhome/charging/build/install/charging
 SOLAR_METRICS_DIR=/home/yannick/IdeaProjects/weberhome/solarMetrics/build/install/solarMetrics
 WEBSITE_DIR=/home/yannick/IdeaProjects/weberhome/website
-CONTROLLER_DIR=/home/yannick/IdeaProjects/weberhome/controller
+CONTROLLER_DIR=/home/yannick/IdeaProjects/weberhome/controller/build/install/controller
 SOCK=/tmp/ssh-mux-$$
 OPTS="-o ControlPath=$SOCK"
 
@@ -19,6 +19,7 @@ scp $OPTS -r "$CHARGING_DIR" $HOST:$DIR/
 scp $OPTS -r "$SOLAR_METRICS_DIR" $HOST:$DIR/
 scp $OPTS -r "$WEBSITE_DIR" $HOST:$DIR/
 scp $OPTS -r "$CONTROLLER_DIR" $HOST:$DIR/
+scp $OPTS -r "deploy.sh" $HOST:$DIR/
 
 # Close the master connection
 ssh $OPTS -O exit $HOST

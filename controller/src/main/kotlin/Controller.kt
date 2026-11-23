@@ -11,7 +11,7 @@ fun main() {
 \/    \/_|\__|\__\___|_|    \_/\_/ \___|\__, |  /_/   
                                         |___/                  
 
-Controller version 0.1.0
+Controller version 0.2.0
 ---
     """.trimIndent()
     )
@@ -23,7 +23,7 @@ Controller version 0.1.0
         .automaticReconnect()
         .applyAutomaticReconnect()
         .buildBlocking()
-//    client.connect()
+    client.connect()
 
     val yannickBedroomController = YannickBedroomController(client)
 

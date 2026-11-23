@@ -1,10 +1,11 @@
 plugins {
     kotlin("jvm")
     alias(libs.plugins.kotlin.serialization)
+    application
 }
 
-group = "de.haw.landshut"
-version = "unspecified"
+group = "de.weberhome"
+version = "0.2.0"
 
 repositories {
     mavenCentral()
@@ -27,6 +28,11 @@ dependencies {
     runtimeOnly(libs.slf4j.tinylog)
 }
 
+application {
+    mainClass.set("ControllerKt")
+    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+}
+
 kotlin {
     jvmToolchain(25)
 }
@@ -34,6 +40,15 @@ kotlin {
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+distributions {
+    main {
+        contents {
+            from("controller.service")
+            from("deploy.sh")
+        }
     }
 }
 

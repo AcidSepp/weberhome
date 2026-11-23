@@ -17,12 +17,20 @@ class DeviceTimer(
 
     private val turnOnJobWrapped = {
         Logger.info("Turn ON $name. Turns off at ${turnOffExecutor.zonedNextTargetTime}.")
-        turnOnJob()
+        try {
+            turnOnJob()
+        } catch (throwable: Throwable) {
+            Logger.error("$name: Error in turnOnJob.", throwable)
+        }
     }
 
     private val turnOffJobWrapped = {
         Logger.info("Turn OFF $name. Turns on at ${turnOnExecutor.zonedNextTargetTime}.")
-        turnOffJob()
+        try {
+            turnOffJob()
+        } catch (throwable: Throwable) {
+            Logger.error("$name: Error in turnOffJob.", throwable)
+        }
     }
 
     private val turnOnExecutor: TaskExecutor =
